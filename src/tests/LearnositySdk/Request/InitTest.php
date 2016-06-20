@@ -79,11 +79,19 @@ class InitTest extends \PHPUnit_Framework_TestCase
 
         return [
             [
-                'security={"consumer_key":"yis0TYCu7U9V4o7M","domain":"localhost","timestamp":"20140626-0528","signature":"e1eae0b86148df69173cb3b824275ea73c9c93967f7d17d6957fcdd299c8a4fe"}&request={"limit":100}&action=get',
+                [
+                    'security' => '{"consumer_key":"yis0TYCu7U9V4o7M","domain":"localhost","timestamp":"20140626-0528","signature":"e1eae0b86148df69173cb3b824275ea73c9c93967f7d17d6957fcdd299c8a4fe"}',
+                    'request'  => '{"limit":100}',
+                    'action'   => 'get'
+                ],
                 new Init($service, $security, $secret, $request, $action)
             ],
             [
-                'security={"consumer_key":"yis0TYCu7U9V4o7M","domain":"localhost","timestamp":"20140626-0528","signature":"18e5416041a13f95681f747222ca7bdaaebde057f4f222083881cd0ad6282c38"}&request={"limit":100}&action=post',
+                [
+                    'security' => '{"consumer_key":"yis0TYCu7U9V4o7M","domain":"localhost","timestamp":"20140626-0528","signature":"18e5416041a13f95681f747222ca7bdaaebde057f4f222083881cd0ad6282c38"}',
+                    'request'  => '{"limit":100}',
+                    'action'   => 'post'
+                ],
                 new Init($service, $security, $secret, $request, 'post')
             ]
         ];
@@ -97,7 +105,17 @@ class InitTest extends \PHPUnit_Framework_TestCase
      */
     public function testGenerate($expectedResult, $initObject)
     {
-        $this->assertEquals($expectedResult, $initObject->generate());
+        $generated = $initObject->generate();
+
+        if (is_array($expectedResult)) {
+            ksort($expectedResult);
+        }
+
+        if (is_array($generated)) {
+            ksort($generated);
+        }
+
+        $this->assertEquals($expectedResult, $generated);
     }
 
     public function dataProviderConstructor()
@@ -106,8 +124,6 @@ class InitTest extends \PHPUnit_Framework_TestCase
 
         $wrongSecurity = $security;
         $wrongSecurity['wrongParam'] = '';
-
-        $wrongRequest = '{{"a":"b"]}';
 
         return [
             [$service, $security, $secret, $request, $action, new Init($service, $security, $secret, $request, $action)],
@@ -118,7 +134,6 @@ class InitTest extends \PHPUnit_Framework_TestCase
             ['questions', $security, $secret, $request, $action, null, '\LearnositySdk\Exceptions\ValidationException', 'If using the question api, a user id needs to be specified'],
             [$service, $security, 25, $request, $action, null, '\LearnositySdk\Exceptions\ValidationException', 'The `secret` argument must be a valid string'],
             [$service, $security, '', $request, $action, null, '\LearnositySdk\Exceptions\ValidationException', 'The `secret` argument must be a valid string'],
-            [$service, $security, $secret, $wrongRequest, $action, null, '\LearnositySdk\Exceptions\ValidationException', 'Invalid data, please check your request packet - Syntax error, malformed JSON'],
             [$service, $security, $secret, 25, $action, null, '\LearnositySdk\Exceptions\ValidationException', 'The request packet must be an array'],
             [$service, $security, $secret, $request, 25, null, '\LearnositySdk\Exceptions\ValidationException', 'The action parameter must be a string']
         ];
